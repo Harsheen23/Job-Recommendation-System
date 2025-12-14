@@ -4,7 +4,7 @@ import json
 
 # ---------- CONFIG ----------
 API_URL = "https://jsearch.p.rapidapi.com/search"
-API_KEY = "cc1ad1ef15msh8c8d7c4ac148bf3p13ab85jsn3d8cade8bee2"  # <-- replace with your actual key
+API_KEY = "######" 
 DB_NAME = "jobs.db"
 
 # ---------- FETCH DATA ----------
