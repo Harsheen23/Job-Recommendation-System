@@ -7,7 +7,7 @@ router = APIRouter(tags=["YouTube Courses"])
 
 # --- YouTube API CONFIG ---
 YOUTUBE_API_KEY = "AIzaSyAFpak-rI5YOhIRaZnk7JfB8ib4ruIqxDM"
-YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/search"
+YOUTUBE_API_URL = "###"
 
 
 # --- Resume text extraction (unchanged, reliable) ---
