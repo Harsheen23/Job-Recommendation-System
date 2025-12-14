@@ -1,0 +1,10 @@
+create a virtual environment = python -m venv venv
+and install necessary libs such as uvicorn, numpy, etc and run the below commands
+venv\Scripts\Activate
+uvicorn app.main:app --reload
+open = http://127.0.0.1:8000/docs#/YouTube%20Courses/recommend_youtube_courses_api_recommend_youtube_courses_post
+
+in another terminal run,
+cd frontend
+python -m http.server 5500
+open = http://127.0.0.1:5500/index.html
