@@ -6,7 +6,7 @@ import re
 router = APIRouter(tags=["YouTube Courses"])
 
 # --- YouTube API CONFIG ---
-YOUTUBE_API_KEY = "AIzaSyAFpak-rI5YOhIRaZnk7JfB8ib4ruIqxDM"
+YOUTUBE_API_KEY = "###"
 YOUTUBE_API_URL = "###"
 
 
