@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Career Recommender</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Hero / Banner Image -->
+<div class="hero-banner"></div>
+
+  <!-- === NAVIGATION BAR === -->
+  <nav class="navbar">
+    <div class="nav-logo">                           </div>
+    <div class="nav-links">
+      <button class="nav-btn" id="jobsTab">Find Jobs</button>
+      <button class="nav-btn" id="coursesTab">Recommended Courses</button>
+    </div>
+  </nav>
+
+  <!-- === JOB SECTION === -->
+  <section id="jobsSection" class="tab-content active">
+    <div class="container">
+      <aside class="sidebar">
+        <h2 style="color: black; text-align: center;">Find Jobs</h2>
+
+        <form id="resumeForm">
+          <div class="input-group">
+            <label for="file">Upload Resume</label>
+            <input type="file" id="file" accept=".pdf" required>
+          </div>
+
+          <div class="input-group">
+            <label for="keyword">Job Keyword</label>
+            <input type="text" id="keyword" placeholder="e.g. Python Developer" required>
+          </div>
+
+          <div class="input-group">
+            <label for="location">Location</label>
+            <input type="text" id="location" placeholder="e.g. Bangalore" required>
+          </div>
+
+          <button type="submit" class="find-btn">Find Jobs</button>
+        </form>
+      </aside>
+
+      <main class="main-content">
+        <section id="results" class="results-box">
+          <p>Results will appear here...</p>
+        </section>
+      </main>
+    </div>
+  </section>
+
+  <!-- === COURSES SECTION === -->
+  <section id="coursesSection" class="tab-content">
+    <div class="container">
+      <aside class="sidebar">
+        <h2>Find Courses</h2>
+        <form id="courseForm">
+          <div class="input-group">
+            <label for="courseFile">Upload Resume</label>
+            <input type="file" id="courseFile" accept=".pdf" required>
+          </div>
+
+          <div class="input-group">
+            <label for="domain">Select Domain</label>
+            <select id="domain" required>
+              <option value="">Choose a domain</option>
+              <option value="ai">Artificial Intelligence</option>
+              <option value="ml">Machine Learning</option>
+              <option value="data">Data Science</option>
+              <option value="web">Web Development</option>
+              <option value="cloud">Cloud Computing</option>
+            </select>
+          </div>
+
+          <button type="submit" class="find-btn">Get Recommended YouTube Courses</button>
+        </form>
+      </aside>
+
+      <main class="main-content">
+        <section id="courseResults" class="results-box">
+          <p>Results will appear here...</p>
+        </section>
+      </main>
+    </div>
+  </section>
+
+  <!-- === JAVASCRIPT === -->
+  <script>
+    const API_BASE = "http://127.0.0.1:8000/api";
+
+    // --- TAB SWITCHING ---
+    const jobsTab = document.getElementById("jobsTab");
+    const coursesTab = document.getElementById("coursesTab");
+    const jobsSection = document.getElementById("jobsSection");
+    const coursesSection = document.getElementById("coursesSection");
+
+    jobsTab.addEventListener("click", () => {
+      jobsTab.classList.add("active");
+      coursesTab.classList.remove("active");
+      jobsSection.classList.add("active");
+      coursesSection.classList.remove("active");
+    });
+
+    coursesTab.addEventListener("click", () => {
+      coursesTab.classList.add("active");
+      jobsTab.classList.remove("active");
+      coursesSection.classList.add("active");
+      jobsSection.classList.remove("active");
+    });
+
+    // === JOB FORM ===
+    document.getElementById("resumeForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const file = document.getElementById("file").files[0];
+      const keyword = document.getElementById("keyword").value.trim();
+      const location = document.getElementById("location").value.trim();
+      const resultsDiv = document.getElementById("results");
+
+      if (!file) return alert("Please upload a resume.");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      resultsDiv.innerHTML = "⏳ Fetching jobs...";
+
+      try {
+        const res = await fetch(
+          `${API_BASE}/resume-jobs?keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`,
+          { method: "POST", body: formData }
+        );
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
+
+        if (!data.jobs?.length) {
+          resultsDiv.innerHTML = "<p>No jobs found.</p>";
+          return;
+        }
+
+        resultsDiv.innerHTML = "";
+        data.jobs.forEach(job => {
+          const card = document.createElement("div");
+          card.classList.add("job-card");
+          card.innerHTML = `
+            <h3>${job.title}</h3>
+            <p><strong>${job.company}</strong> — ${job.location}</p>
+            <p>${job.description || "No description available."}</p>
+            <a href="${job.apply_link}" target="_blank">Apply Here</a>
+          `;
+          resultsDiv.appendChild(card);
+        });
+
+      } catch (err) {
+        resultsDiv.innerHTML = `<p class="error">${err.message}</p>`;
+      }
+    });
+
+    // === COURSE FORM ===
+    document.getElementById("courseForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const file = document.getElementById("courseFile").files[0];
+      const domain = document.getElementById("domain").value;
+      const resultsDiv = document.getElementById("courseResults");
+
+      if (!file || !domain) {
+        alert("Please upload a resume and select a domain.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("domain", domain);
+
+      resultsDiv.innerHTML = "⏳ Analyzing your resume and fetching YouTube courses...";
+
+      try {
+        const res = await fetch(`${API_BASE}/recommend-youtube-courses`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          resultsDiv.innerHTML = `<p style="color:red;">${data.message}</p>`;
+          return;
+        }
+
+        let html = `
+          <div class="skills">
+            <h3><br>Extracted Skills:<br></h3>
+            <p style="font-size: 1.2rem;">${data.extracted_skills?.join(", ") || "None detected"}</p>
+          </div>
+          <div class="missing">
+            <h3><br>Missing Skills for ${domain.toUpperCase()}:</h3>
+           <p style="font-size: 1.2rem;">
+  ${data.missing_skills?.join(", ") || "No missing skills"}
+</p>
+          </div>
+        `;
+
+        if (data.courses?.length) {
+          html += `<h2 style="text-align:center;"><br>Recommended YouTube Courses\n</h2>`;
+          html += `<div class="courses-container">`;
+          data.courses.forEach(course => {
+            html += `
+              <div class="course-card">
+                <img src="${course.thumbnail}" alt="${course.title}" style="width:100%;border-radius:8px;">
+                <h3>${course.title}</h3>
+                <p style="font-size: 1.2rem;">${course.description || "No description available"}</p>
+                <a href="${course.url}" target="_blank">Watch on YouTube</a>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        } else {
+          html += `<p style="text-align:center;">No YouTube courses found for these skills.</p>`;
+        }
+
+        resultsDiv.innerHTML = html;
+
+      } catch (err) {
+        resultsDiv.innerHTML = `<p class="error">${err.message}</p>`;
+      }
+    });
+  </script>
+  <footer class="footer">
+  <img src="https://guidacentconsultingservices.com/wp-content/uploads/2021/06/bangalore-institute-of-technology.png" alt="BIT Logo" class="footer-logo">
+  <p>&copy; 2025 Your Company Name. All rights reserved.</p>
+</footer>
+
+
+</body>
+</html>

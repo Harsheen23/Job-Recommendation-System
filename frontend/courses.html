@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Course Recommender (YouTube)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+
+    .form-section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .form-section input, .form-section select, .form-section button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .skills, .missing {
+      background: #fff;
+      padding: 15px;
+      margin: 10px auto;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      max-width: 800px;
+    }
+    .courses-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      max-width: 1000px;
+      margin: 20px auto;
+    }
+    .course-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .course-card h3 { margin: 0 0 10px 0; font-size: 18px; }
+    .course-card a { color: #0066cc; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>AI Course Recommender (YouTube)</h1>
+
+  <form id="courseForm" class="form-section">
+    <input type="file" id="file" accept=".pdf" required>
+    <select id="domain" required>
+      <option value="">Select a domain</option>
+      <option value="ai">Artificial Intelligence</option>
+      <option value="ml">Machine Learning</option>
+      <option value="data">Data Science</option>
+      <option value="web">Web Development</option>
+      <option value="cloud">Cloud Computing</option>
+    </select>
+    <button type="submit">Get Recommended YouTube Courses</button>
+  </form>
+
+  <div id="results">
+    <p>⏳ Results will appear here...</p>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000/api"; // backend base URL
+
+    document.getElementById("courseForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const file = document.getElementById("file").files[0];
+      const domain = document.getElementById("domain").value;
+      const resultsDiv = document.getElementById("results");
+
+      if (!file || !domain) {
+        alert("Please upload a resume and select a domain.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("domain", domain);
+
+      resultsDiv.innerHTML = "⏳ Analyzing your resume and fetching YouTube courses...";
+
+      try {
+        const res = await fetch(`${API_BASE}/recommend-youtube-courses`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          resultsDiv.innerHTML = `<p style="color:red;">${data.message}</p>`;
+          return;
+        }
+
+        // --- Build Results HTML ---
+        let html = `
+          <div class="skills">
+            <h3>Extracted Skills:</h3>
+            <p>${data.extracted_skills?.join(", ") || "None detected"}</p>
+          </div>
+          <div class="missing">
+            <h3>Missing Skills for ${domain.toUpperCase()}:</h3>
+            <p>${data.missing_skills?.join(", ") || "No missing skills"}</p>
+          </div>
+        `;
+
+        if (data.courses && data.courses.length > 0) {
+          html += `<h2 style="text-align:center;">Recommended YouTube Courses</h2>`;
+          html += `<div class="courses-container">`;
+          data.courses.forEach(course => {
+            html += `
+              <div class="course-card">
+                <img src="${course.thumbnail}" alt="${course.title}" style="width:100%;border-radius:8px;">
+                <h3>${course.title}</h3>
+                <p>${course.description || "No description available"}</p>
+                <a href="${course.url}" target="_blank">Watch on YouTube</a>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        } else {
+          html += `<p style="text-align:center;">No YouTube courses found for these skills.</p>`;
+        }
+
+        resultsDiv.innerHTML = html;
+
+      } catch (err) {
+        console.error("Error:", err);
+        resultsDiv.innerHTML = `<p style="color:red;">${err.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

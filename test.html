@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resume Upload Test</title>
+</head>
+<body>
+  <h2>PDF Upload Test</h2>
+
+  <input type="file" id="file" name="file" accept=".pdf" required><br><br>
+  <input type="text" id="keyword" name="keyword" value="python developer" required><br><br>
+  <input type="text" id="location" name="location" value="Bangalore" required><br><br>
+  <button id="uploadBtn" type="button">Upload</button>
+
+  <h3>Server Response:</h3>
+  <pre id="output" style="background:#f3f3f3; padding:10px; border:1px solid #ccc; max-width:600px;"></pre>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000/api";
+
+    document.getElementById("uploadBtn").addEventListener("click", async (e) => {
+      e.preventDefault();
+      console.log("Upload clicked");
+
+      const file = document.getElementById("file").files[0];
+      const keyword = document.getElementById("keyword").value.trim();
+      const location = document.getElementById("location").value.trim();
+      const output = document.getElementById("output");
+
+      if (!file) {
+        output.textContent = "⚠️ Please select a PDF file first.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("keyword", keyword);
+      formData.append("location", location);
+
+      output.textContent = "⏳ Uploading and waiting for response...";
+
+      try {
+        console.log("About to call fetch...");
+        const res = await fetch(`${API_BASE}/resume-jobs`, {
+          method: "POST",
+          body: formData,
+        });
+        console.log("Response received:", res.status);
+
+        const text = await res.text();
+        output.textContent = `Status: ${res.status}\n\n${text}`;
+      } catch (err) {
+        output.textContent = `❌ Error: ${err.message}`;
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
