@@ -10,7 +10,7 @@ router = APIRouter()
 
 # --- CONFIG ---
 API_URL = "https://jsearch.p.rapidapi.com/search"
-API_KEY = "cc1ad1ef15msh8c8d7c4ac148bf3p13ab85jsn3d8cade8bee2"  # safer than hardcoding
+API_KEY = "###"  
 
 HEADERS = {
     "x-rapidapi-key": API_KEY,
